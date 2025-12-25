@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 const crafts = [
   {
@@ -122,6 +122,7 @@ export default function Home() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [activeFilter, setActiveFilter] = useState('All');
   const [isScrolled, setIsScrolled] = useState(false);
+  const [activeSection, setActiveSection] = useState('home');
 
   const categories = ['All', 'Ceramics', 'Textile Art', 'Woodwork', 'Paper Art', 'Metalwork', 'Fiber Art'];
   const filteredCrafts = activeFilter === 'All' 
@@ -133,21 +134,18 @@ export default function Home() {
       setIsScrolled(window.scrollY > 50);
       
       const sections = document.querySelectorAll('section[id]');
-      const navLinks = document.querySelectorAll('nav a[href^="#"]');
       
       sections.forEach(section => {
-        const sectionTop = section.offsetTop - 100;
-        const sectionHeight = section.clientHeight;
+        const rect = section.getBoundingClientRect();
+        const sectionTop = rect.top + window.scrollY - 100;
+        const sectionHeight = rect.height;
         const scrollPosition = window.scrollY;
         
         if (scrollPosition >= sectionTop && scrollPosition < sectionTop + sectionHeight) {
           const id = section.getAttribute('id');
-          navLinks.forEach(link => {
-            link.classList.remove('text-gold', 'border-gold');
-            if (link.getAttribute('href') === `#${id}`) {
-              link.classList.add('text-gold', 'border-gold');
-            }
-          });
+          if (id) {
+            setActiveSection(id);
+          }
         }
       });
     };
@@ -160,8 +158,9 @@ export default function Home() {
   const scrollToSection = (id: string) => {
     const element = document.getElementById(id);
     if (element) {
+      const elementPosition = element.getBoundingClientRect().top + window.scrollY;
       window.scrollTo({
-        top: element.offsetTop - 80,
+        top: elementPosition - 80,
         behavior: 'smooth'
       });
     }
@@ -187,14 +186,18 @@ export default function Home() {
 
             {/* Desktop Navigation */}
             <div className="hidden md:flex items-center space-x-10">
-              {['Home', 'About', 'Gallery', 'Process', 'Contact'].map((item) => (
+              {['home', 'about', 'gallery', 'process', 'contact'].map((item) => (
                 <button
                   key={item}
-                  onClick={() => scrollToSection(item.toLowerCase())}
-                  className="font-serif text-[#5D4A32] hover:text-[#D4AF37] transition-colors duration-300 relative group text-lg"
+                  onClick={() => scrollToSection(item)}
+                  className={`font-serif text-lg transition-colors duration-300 relative group ${
+                    activeSection === item ? 'text-[#D4AF37]' : 'text-[#5D4A32] hover:text-[#D4AF37]'
+                  }`}
                 >
-                  {item}
-                  <span className="absolute -bottom-1 left-0 w-0 h-[1px] bg-[#D4AF37] group-hover:w-full transition-all duration-300"></span>
+                  {item.charAt(0).toUpperCase() + item.slice(1)}
+                  <span className={`absolute -bottom-1 left-0 h-[1px] bg-[#D4AF37] transition-all duration-300 ${
+                    activeSection === item ? 'w-full' : 'w-0 group-hover:w-full'
+                  }`}></span>
                 </button>
               ))}
             </div>
@@ -219,13 +222,15 @@ export default function Home() {
         {isMenuOpen && (
           <div className="md:hidden bg-[#F5F1E8]/95 backdrop-blur-md border-t border-[#EFEAE0] mt-2">
             <div className="px-4 py-6 space-y-4">
-              {['Home', 'About', 'Gallery', 'Process', 'Contact'].map((item) => (
+              {['home', 'about', 'gallery', 'process', 'contact'].map((item) => (
                 <button
                   key={item}
-                  onClick={() => scrollToSection(item.toLowerCase())}
-                  className="block w-full text-left font-serif text-[#5D4A32] hover:text-[#D4AF37] transition-colors duration-300 text-lg py-3 border-b border-[#EFEAE0]"
+                  onClick={() => scrollToSection(item)}
+                  className={`block w-full text-left font-serif transition-colors duration-300 text-lg py-3 border-b border-[#EFEAE0] ${
+                    activeSection === item ? 'text-[#D4AF37]' : 'text-[#5D4A32] hover:text-[#D4AF37]'
+                  }`}
                 >
-                  {item}
+                  {item.charAt(0).toUpperCase() + item.slice(1)}
                 </button>
               ))}
             </div>
@@ -236,13 +241,15 @@ export default function Home() {
       {/* Hero Section */}
       <section 
         id="home" 
-        className="relative min-h-screen flex items-center justify-center overflow-hidden bg-paper"
+        className="relative min-h-screen flex items-center justify-center overflow-hidden"
+        style={{
+          background: 'linear-gradient(135deg, #F5F1E8 0%, #EFEAE0 100%)',
+        }}
       >
         {/* Background decorative elements */}
         <div className="absolute inset-0 overflow-hidden opacity-30">
           <div className="absolute top-20 left-10 w-48 h-48 border border-[#D4AF37]/10 rounded-full animate-pulse"></div>
           <div className="absolute bottom-20 right-10 w-64 h-64 border border-[#A68A64]/10 rounded-full"></div>
-          <div className="absolute top-1/2 left-1/3 w-32 h-32 border border-[#D4AF37]/5 rounded-full animate-spin-slow"></div>
         </div>
 
         <div className="relative z-10 text-center px-4 sm:px-6 max-w-5xl mx-auto">
@@ -363,7 +370,7 @@ export default function Home() {
             <div className="relative">
               <div className="aspect-[3/4] bg-gradient-to-br from-[#EFEAE0] to-[#F5F1E8] rounded-lg overflow-hidden shadow-2xl">
                 <div 
-                  className="w-full h-full bg-cover bg-center mix-blend-multiply"
+                  className="w-full h-full bg-cover bg-center"
                   style={{
                     backgroundImage: 'url(https://images.unsplash.com/photo-1545235617-9465d2a55698?q=80&w=2080&auto=format&fit=crop)',
                   }}
@@ -587,7 +594,7 @@ export default function Home() {
                     title="Message on WhatsApp"
                   >
                     <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.76.982.998-3.675-.236-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.9 6.994c-.004 5.45-4.438 9.88-9.888 9.88m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.333.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.333 11.893-11.893 0-3.18-1.24-6.162-3.495-8.411"/>
+                      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.76.982.998-3.675-.236-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.9 6.994c-.004 5.45-4.438 9.88-9.888 9.88m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.333.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6                      11.893 0-3.18-1.24-6.162-3.495-8.411"/>
                     </svg>
                   </a>
                   
@@ -640,16 +647,69 @@ export default function Home() {
                   </a>
                 </div>
                 
-               
+                <div className="pt-8 border-t border-[#EFEAE0]">
+                  <h3 className="text-2xl font-serif text-[#5D4A32] mb-6">
+                    Or Send a Message Here
+                  </h3>
+                  <form className="space-y-6">
+                    <div className="grid md:grid-cols-2 gap-6">
+                      <div>
+                        <label className="block font-serif text-[#8B7355] mb-2">Name *</label>
+                        <input
+                          type="text"
+                          required
+                          className="w-full px-4 py-3 bg-transparent border-b-2 border-[#A68A64] text-[#5D4A32] placeholder-[#A68A64] focus:outline-none focus:border-[#D4AF37] transition-colors duration-300"
+                          placeholder="Your name"
+                        />
+                      </div>
+                      <div>
+                        <label className="block font-serif text-[#8B7355] mb-2">Phone</label>
+                        <input
+                          type="tel"
+                          className="w-full px-4 py-3 bg-transparent border-b-2 border-[#A68A64] text-[#5D4A32] placeholder-[#A68A64] focus:outline-none focus:border-[#D4AF37] transition-colors duration-300"
+                          placeholder="Your phone number"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block font-serif text-[#8B7355] mb-2">Subject</label>
+                      <select className="w-full px-4 py-3 bg-transparent border-b-2 border-[#A68A64] text-[#5D4A32] focus:outline-none focus:border-[#D4AF37] transition-colors duration-300">
+                        <option value="">Select inquiry type</option>
+                        <option value="commission">Commission Request</option>
+                        <option value="exhibition">Exhibition Inquiry</option>
+                        <option value="visit">Studio Visit</option>
+                        <option value="collaboration">Collaboration</option>
+                        <option value="purchase">Purchase Inquiry</option>
+                        <option value="other">Other</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block font-serif text-[#8B7355] mb-2">Message *</label>
+                      <textarea
+                        required
+                        rows={4}
+                        className="w-full px-4 py-3 bg-transparent border-b-2 border-[#A68A64] text-[#5D4A32] placeholder-[#A68A64] focus:outline-none focus:border-[#D4AF37] transition-colors duration-300 resize-none"
+                        placeholder="Tell me about your inquiry..."
+                      ></textarea>
+                    </div>
+                    <button
+                      type="submit"
+                      className="w-full py-4 bg-gradient-to-r from-[#5D4A32] to-[#8B7355] text-[#F5F1E8] font-serif text-lg rounded-sm hover:from-[#8B7355] hover:to-[#A68A64] transition-all duration-300 transform hover:-translate-y-1 shadow-lg hover:shadow-xl"
+                    >
+                      Send Message
+                    </button>
+                  </form>
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </section> 
+      </section>
+
       {/* Footer */}
       <footer className="bg-[#5D4A32] text-[#F5F1E8] py-16 px-4 sm:px-6">
         <div className="max-w-7xl mx-auto">
-          <div className="grid md:grid-cols-3 gap-12 mb-12 pb-12 border-b border-[#8B7355]/30">
+          <div className="grid md:grid-cols-4 gap-12 mb-12 pb-12 border-b border-[#8B7355]/30">
             <div>
               <h3 className="text-3xl font-serif mb-4">Navaneeth</h3>
               <p className="text-sm opacity-80 leading-relaxed">
@@ -669,6 +729,26 @@ export default function Home() {
                     {item}
                   </button>
                 ))}
+              </div>
+            </div>
+            <div>
+              <h4 className="font-serif text-lg mb-6">Contact Info</h4>
+              <div className="space-y-3">
+                <p className="text-sm opacity-80">
+                  <strong>Phone/WhatsApp:</strong><br />
+                  <a 
+                    href="https://wa.me/918129502212"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:text-[#F4E9C9] transition-colors duration-300"
+                  >
+                    +91 81295 02212
+                  </a>
+                </p>
+                <p className="text-sm opacity-80">
+                  <strong>Studio:</strong><br />
+                  Artisan District, Chennai
+                </p>
               </div>
             </div>
             <div>
@@ -699,15 +779,15 @@ export default function Home() {
               </p>
             </div>
             <div className="flex items-center space-x-6">
-              <a href="#" className="text-sm opacity-80 hover:opacity-100 hover:text-[#F4E9C9] transition-colors duration-300">
+              <button className="text-sm opacity-80 hover:opacity-100 hover:text-[#F4E9C9] transition-colors duration-300">
                 Privacy Policy
-              </a>
-              <a href="#" className="text-sm opacity-80 hover:opacity-100 hover:text-[#F4E9C9] transition-colors duration-300">
+              </button>
+              <button className="text-sm opacity-80 hover:opacity-100 hover:text-[#F4E9C9] transition-colors duration-300">
                 Terms of Service
-              </a>
-              <a href="#" className="text-sm opacity-80 hover:opacity-100 hover:text-[#F4E9C9] transition-colors duration-300">
+              </button>
+              <button className="text-sm opacity-80 hover:opacity-100 hover:text-[#F4E9C9] transition-colors duration-300">
                 Credits
-              </a>
+              </button>
             </div>
           </div>
         </div>
@@ -724,25 +804,6 @@ export default function Home() {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
         </svg>
       </button>
-
-      <style jsx global>{`
-        @keyframes spin-slow {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-        
-        .animate-spin-slow {
-          animation: spin-slow 20s linear infinite;
-        }
-        
-        .text-gold {
-          color: #D4AF37;
-        }
-        
-        .border-gold {
-          border-color: #D4AF37;
-        }
-      `}</style>
     </div>
   );
 }
